@@ -1,0 +1,74 @@
+name: ❓ Question
+description: Ask a question about usage, setup, or how something works
+title: "[Question]: "
+labels: ["question", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Have a question about zjyo? We're here to help! Please check the documentation first, then ask away.
+
+  - type: checkboxes
+    id: search
+    attributes:
+      label: Documentation Check
+      description: Please check existing resources before asking
+      options:
+        - label: I have read the README.md
+        - label: I have checked existing issues and discussions
+        - label: I have read the contributing guidelines (if relevant)
+
+  - type: dropdown
+    id: question_type
+    attributes:
+      label: Question Type
+      description: What type of question is this?
+      options:
+        - Installation and setup
+        - Shell integration
+        - Usage and commands
+        - Compatibility with original z
+        - Performance and troubleshooting
+        - Development and contributing
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: question
+    attributes:
+      label: Your Question
+      description: What would you like to know?
+      placeholder: How do I...? Why does...? What's the best way to...?
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Provide any relevant context about your situation
+      placeholder: |
+        - What you're trying to accomplish
+        - What you've already tried
+        - Your current setup or configuration
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment (if relevant)
+      description: Your system information (if the question is environment-specific)
+      value: |
+        - OS: [e.g. Ubuntu 22.04, macOS 13.0, Windows 11]
+        - Shell: [e.g. bash 5.1, zsh 5.8, fish 3.3]
+        - zjyo version: [e.g. 0.1.0]
+        - Installation method: [e.g. cargo install, binary download]
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of Conduct
+      description: By submitting this issue, you agree to follow our Code of Conduct
+      options:
+        - label: I agree to follow this project's Code of Conduct
+          required: true

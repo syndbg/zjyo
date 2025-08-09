@@ -1,0 +1,125 @@
+name: 🐛 Bug Report
+description: Report a bug or unexpected behavior
+title: "[Bug]: "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug! Please fill out the information below to help us investigate.
+
+  - type: checkboxes
+    id: search
+    attributes:
+      label: Search for existing issues
+      description: Please search for existing issues before creating a new one
+      options:
+        - label: I have searched for existing issues
+          required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: A clear and concise description of what the bug is
+      placeholder: Describe the bug...
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to Reproduce
+      description: Steps to reproduce the behavior
+      placeholder: |
+        1. Run `zjyo --add` in directory X
+        2. Navigate to directory Y
+        3. Run `z pattern`
+        4. See error...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What you expected to happen
+      placeholder: I expected zjyo to navigate to the correct directory...
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: What actually happened
+      placeholder: Instead, zjyo returned an error...
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment Information
+      description: |
+        Please provide information about your environment.
+        Tip: You can get zjyo version with `zjyo --version`
+      value: |
+        - OS: [e.g. Ubuntu 22.04, macOS 13.0, Windows 11]
+        - Shell: [e.g. bash 5.1, zsh 5.8, fish 3.3]
+        - zjyo version: [e.g. 0.1.0]
+        - Rust version: [e.g. 1.89.0]
+        - Installation method: [e.g. cargo install, binary download, built from source]
+    validations:
+      required: true
+
+  - type: textarea
+    id: database
+    attributes:
+      label: Database Content (if relevant)
+      description: |
+        If the issue is related to database operations, please provide sample content.
+        You can get this with `cat ~/.z` or `z -l`
+      placeholder: |
+        Sample database entries or output from `z -l`:
+        /home/user/projects|5.0|1640995200
+        /home/user/documents|3.0|1640995100
+      render: text
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Error Output / Logs
+      description: Any error messages or relevant output
+      placeholder: |
+        Error message or output:
+        ```
+        z: no matches found for: pattern
+        ```
+      render: shell
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Add any other context about the problem here
+      placeholder: Any additional information that might be helpful...
+
+  - type: checkboxes
+    id: compatibility
+    attributes:
+      label: Compatibility Check
+      description: Have you tested this with the original z?
+      options:
+        - label: This works correctly with the original z tool
+        - label: This also fails with the original z tool
+        - label: I haven't tested with the original z tool
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of Conduct
+      description: By submitting this issue, you agree to follow our Code of Conduct
+      options:
+        - label: I agree to follow this project's Code of Conduct
+          required: true

@@ -1,0 +1,53 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug zjyo",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/target/debug/zjyo",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "env": {},
+            "stopOnEntry": false,
+            "preLaunchTask": "build",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Debug zjyo with args",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/target/debug/zjyo",
+            "args": ["--help"],
+            "cwd": "${workspaceFolder}",
+            "env": {},
+            "stopOnEntry": false,
+            "preLaunchTask": "build",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Run zjyo (Release)",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/target/release/zjyo",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "env": {},
+            "stopOnEntry": false,
+            "preLaunchTask": "build-release",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Test with pattern",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/target/debug/zjyo",
+            "args": ["-l"],
+            "cwd": "${workspaceFolder}",
+            "env": {},
+            "stopOnEntry": false,
+            "preLaunchTask": "build",
+            "console": "integratedTerminal"
+        }
+    ]
+}

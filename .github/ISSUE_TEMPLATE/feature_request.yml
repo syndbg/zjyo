@@ -1,0 +1,129 @@
+name: ✨ Feature Request
+description: Suggest a new feature or enhancement
+title: "[Feature]: "
+labels: ["enhancement", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting a new feature! Please provide details about what you'd like to see added to zjyo.
+
+  - type: checkboxes
+    id: search
+    attributes:
+      label: Search for existing requests
+      description: Please search for existing feature requests before creating a new one
+      options:
+        - label: I have searched for existing feature requests
+          required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement
+      description: What problem does this feature solve? What's missing from current functionality?
+      placeholder: I'm frustrated when I try to... because...
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: What would you like to see added or changed?
+      placeholder: I'd like zjyo to support...
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: What alternatives have you considered? How do other tools handle this?
+      placeholder: |
+        - Alternative 1: ...
+        - Alternative 2: ...
+        - How zoxide handles this: ...
+
+  - type: dropdown
+    id: feature_type
+    attributes:
+      label: Feature Type
+      description: What type of feature is this?
+      options:
+        - New command-line option
+        - Algorithm improvement
+        - Performance enhancement
+        - Shell integration improvement
+        - Database format enhancement
+        - Documentation improvement
+        - Development/tooling improvement
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: compatibility
+    attributes:
+      label: Compatibility Impact
+      description: How would this affect compatibility with original z?
+      options:
+        - Fully backward compatible
+        - Requires new option (backward compatible)
+        - Minor breaking change
+        - Major breaking change
+        - Not applicable
+    validations:
+      required: true
+
+  - type: textarea
+    id: examples
+    attributes:
+      label: Usage Examples
+      description: Provide examples of how this feature would be used
+      placeholder: |
+        ```bash
+        # Example 1
+        z --new-option pattern
+
+        # Example 2
+        z pattern --enhanced-mode
+        ```
+      render: shell
+
+  - type: textarea
+    id: benefits
+    attributes:
+      label: Benefits
+      description: Who would benefit from this feature and how?
+      placeholder: |
+        - Power users who need...
+        - Developers who work with...
+        - Users coming from tool X who expect...
+
+  - type: checkboxes
+    id: implementation
+    attributes:
+      label: Implementation Willingness
+      description: Are you willing to help implement this feature?
+      options:
+        - label: I'm willing to implement this feature
+        - label: I can help with testing
+        - label: I can help with documentation
+        - label: I can provide feedback during development
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Any additional context, mockups, or references
+      placeholder: Links to similar features in other tools, mockups, etc.
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of Conduct
+      description: By submitting this issue, you agree to follow our Code of Conduct
+      options:
+        - label: I agree to follow this project's Code of Conduct
+          required: true

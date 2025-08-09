@@ -1,0 +1,43 @@
+[package]
+name = "zjyo"
+version = "0.1.0"
+edition = "2021"
+authors = ["Anton Antonov <anton.synd.antonov@gmail.com>"]
+description = "zjyo - A Rust implementation of the popular rupa/z directory navigation tool - tracks most used directories based on frecency"
+repository = "https://github.com/syndbg/zjyo"
+homepage = "https://github.com/syndbg/zjyo"
+documentation = "https://github.com/syndbg/zjyo"
+readme = "README.md"
+license = "Apache-2.0"
+keywords = ["cli", "navigation", "directory", "filesystem", "productivity"]
+categories = ["command-line-utilities", "filesystem"]
+exclude = [
+    ".github/",
+    "target/",
+    "Dockerfile",
+    "test.sh",
+    ".releaserc.json",
+    ".vscode/",
+    "scripts/"
+]
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
+
+[package.metadata.release]
+pre-release-commit-message = "chore: release {{version}}"
+tag-message = "Release {{version}}"
+tag-name = "v{{version}}"
+push = false
+
+[[bin]]
+name = "zjyo"
+path = "src/main.rs"
+
+[dependencies]
+clap = { version = "4.5", features = ["derive"] }
+home = "0.5"
+
+[dev-dependencies]
+tempfile = "3.0"

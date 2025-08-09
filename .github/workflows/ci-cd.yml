@@ -1,0 +1,332 @@
+name: CI/CD
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+permissions:
+  contents: write
+  packages: write
+  id-token: write
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    outputs:
+      should-release: ${{ steps.version.outputs.should-release }}
+      version: ${{ steps.version.outputs.next }}
+      current-version: ${{ steps.version.outputs.current }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Check formatting
+        run: cargo fmt -- --check
+
+      - name: Run clippy
+        run: cargo clippy --all-targets --all-features -- -D warnings
+
+      - name: Build
+        run: cargo build --release --verbose
+
+      - name: Run tests
+        run: cargo test --verbose --all-features --workspace
+
+      - name: Check version for release
+        id: version
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: |
+          CURRENT_VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          echo "current=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+
+          # Determine version bump type based on commit messages
+          if git log $CURRENT_VERSION..HEAD --pretty=format:"%s" | grep -q "BREAKING CHANGE\|!:"; then
+            BUMP_TYPE="major"
+          elif git log $CURRENT_VERSION..HEAD --pretty=format:"%s" | grep -qE "^feat(\(.+\))?:"; then
+            BUMP_TYPE="minor"
+          else
+            BUMP_TYPE="patch"
+          fi
+
+          # Extract current version number (remove 'v' prefix)
+          CURRENT_NUM=${CURRENT_VERSION#v}
+          if [ "$CURRENT_NUM" = "0.0.0" ]; then
+            NEXT_VERSION="v0.1.0"
+          else
+            # Calculate next version
+            IFS='.' read -r major minor patch <<< "$CURRENT_NUM"
+            case $BUMP_TYPE in
+              major) NEXT_VERSION="v$((major + 1)).0.0" ;;
+              minor) NEXT_VERSION="v$major.$((minor + 1)).0" ;;
+              patch) NEXT_VERSION="v$major.$minor.$((patch + 1))" ;;
+            esac
+          fi
+
+          echo "next=$NEXT_VERSION" >> $GITHUB_OUTPUT
+          echo "bump_type=$BUMP_TYPE" >> $GITHUB_OUTPUT
+
+          # Check if we should release (version changed)
+          if [ "$CURRENT_VERSION" != "$NEXT_VERSION" ]; then
+            echo "should-release=true" >> $GITHUB_OUTPUT
+            echo "Version will be bumped from $CURRENT_VERSION to $NEXT_VERSION"
+          else
+            echo "should-release=false" >> $GITHUB_OUTPUT
+            echo "No version bump needed"
+          fi
+
+  test-docker:
+    name: Test in Docker
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t zjyo .
+
+      - name: Run Docker tests
+        run: docker run --rm zjyo /test.sh
+
+  build-linux:
+    name: Build Linux
+    runs-on: ubuntu-latest
+    needs: [test, test-docker]
+    if: needs.test.outputs.should-release == 'true'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-release-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-release-
+            ${{ runner.os }}-cargo-
+
+      - name: Build Linux binaries
+        run: |
+          # Build for multiple targets
+          rustup target add x86_64-unknown-linux-gnu
+          rustup target add x86_64-unknown-linux-musl
+
+          # Install cross-compilation tools
+          sudo apt update
+          sudo apt install -y musl-tools
+
+          # Build for Linux (glibc)
+          cargo build --release --target x86_64-unknown-linux-gnu
+
+          # Build for Linux (musl - static binary)
+          cargo build --release --target x86_64-unknown-linux-musl
+
+          # Create release directory
+          mkdir -p release/{linux-x64,linux-x64-musl}
+
+          # Copy binaries
+          cp target/x86_64-unknown-linux-gnu/release/zjyo release/linux-x64/
+          cp target/x86_64-unknown-linux-musl/release/zjyo release/linux-x64-musl/
+
+          # Copy documentation
+          cp README.md LICENSE release/linux-x64/
+          cp README.md LICENSE release/linux-x64-musl/
+
+      - name: Create Linux archives
+        run: |
+          cd release
+
+          # Create Linux archive
+          tar -czf zjyo-${{ needs.test.outputs.version }}-linux-x64.tar.gz -C linux-x64 .
+
+          # Create Linux musl archive
+          tar -czf zjyo-${{ needs.test.outputs.version }}-linux-x64-musl.tar.gz -C linux-x64-musl .
+
+      - name: Upload Linux artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-artifacts-linux
+          path: |
+            release/zjyo-${{ needs.test.outputs.version }}-linux-x64.tar.gz
+            release/zjyo-${{ needs.test.outputs.version }}-linux-x64-musl.tar.gz
+
+  build-macos:
+    name: Build macOS
+    runs-on: macos-latest
+    needs: [test]
+    if: needs.test.outputs.should-release == 'true'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-apple-darwin,aarch64-apple-darwin
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-release-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-release-
+            ${{ runner.os }}-cargo-
+
+      - name: Build macOS binaries
+        run: |
+          # Build for Intel macOS (x86_64)
+          cargo build --release --target x86_64-apple-darwin
+
+          # Build for Apple Silicon macOS (ARM64)
+          cargo build --release --target aarch64-apple-darwin
+
+          # Create release directories
+          mkdir -p release/{macos-x64,macos-arm64}
+
+          # Copy Intel binary
+          cp target/x86_64-apple-darwin/release/zjyo release/macos-x64/
+          cp README.md LICENSE release/macos-x64/
+
+          # Copy ARM64 binary
+          cp target/aarch64-apple-darwin/release/zjyo release/macos-arm64/
+          cp README.md LICENSE release/macos-arm64/
+
+      - name: Create macOS archives
+        run: |
+          cd release
+
+          # Create Intel macOS archive
+          tar -czf zjyo-${{ needs.test.outputs.version }}-macos-x64.tar.gz -C macos-x64 .
+
+          # Create ARM64 macOS archive
+          tar -czf zjyo-${{ needs.test.outputs.version }}-macos-arm64.tar.gz -C macos-arm64 .
+
+      - name: Upload macOS artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-artifacts-macos
+          path: |
+            release/zjyo-${{ needs.test.outputs.version }}-macos-x64.tar.gz
+            release/zjyo-${{ needs.test.outputs.version }}-macos-arm64.tar.gz
+
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    needs: [test, build-linux, build-macos]
+    if: needs.test.outputs.should-release == 'true'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts/
+
+      - name: Prepare release files
+        run: |
+          mkdir -p release
+          cp artifacts/release-artifacts-linux/* release/
+          cp artifacts/release-artifacts-macos/* release/
+          ls -la release/
+
+      - name: Create and push tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # Create and push tag
+          git tag ${{ needs.test.outputs.version }}
+          git push origin ${{ needs.test.outputs.version }}
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ needs.test.outputs.version }}
+          name: Release ${{ needs.test.outputs.version }}
+          body: |
+            ## Changes
+
+            This release was automatically generated based on conventional commits.
+
+            ### Installation
+
+            **Quick Install Script:**
+            ```bash
+            curl -sSL https://github.com/syndbg/zjyo/raw/main/install.sh | bash
+            ```
+
+            **Manual Installation:**
+
+            **Linux (x86_64 - glibc):**
+            ```bash
+            wget https://github.com/syndbg/zjyo/releases/download/${{ needs.test.outputs.version }}/zjyo-${{ needs.test.outputs.version }}-linux-x64.tar.gz
+            tar -xzf zjyo-${{ needs.test.outputs.version }}-linux-x64.tar.gz
+            sudo cp zjyo /usr/local/bin/
+            ```
+
+            **Linux (x86_64 - musl, static binary):**
+            ```bash
+            wget https://github.com/syndbg/zjyo/releases/download/${{ needs.test.outputs.version }}/zjyo-${{ needs.test.outputs.version }}-linux-x64-musl.tar.gz
+            tar -xzf zjyo-${{ needs.test.outputs.version }}-linux-x64-musl.tar.gz
+            sudo cp zjyo /usr/local/bin/
+            ```
+
+            **macOS (Intel x86_64 only):**
+            ```bash
+            wget https://github.com/syndbg/zjyo/releases/download/${{ needs.test.outputs.version }}/zjyo-${{ needs.test.outputs.version }}-macos-x64.tar.gz
+            tar -xzf zjyo-${{ needs.test.outputs.version }}-macos-x64.tar.gz
+            sudo cp zjyo /usr/local/bin/
+            ```
+
+            **macOS (Apple Silicon ARM64 only):**
+            ```bash
+            wget https://github.com/syndbg/zjyo/releases/download/${{ needs.test.outputs.version }}/zjyo-${{ needs.test.outputs.version }}-macos-arm64.tar.gz
+            tar -xzf zjyo-${{ needs.test.outputs.version }}-macos-arm64.tar.gz
+            sudo cp zjyo /usr/local/bin/
+            ```
+
+            See [README.md](https://github.com/syndbg/zjyo#readme) for shell integration setup.
+          files: |
+            release/*
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
