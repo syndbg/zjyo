@@ -126,7 +126,7 @@ Since binaries can't change your shell's directory, add these wrapper functions:
 # zjyo wrapper function
 z() {
     # Handle all flags that don't require directory change (pass through to zjyo directly)
-    if [[ "$*" == *"--help"* ]] || [[ "$*" == *"-h"* ]] || [[ "$*" == *"-l"* ]] || [[ "$*" == *"-r"* ]] || [[ "$*" == *"-t"* ]] || [[ "$*" == *"-c"* ]] || [[ "$*" == *"-e"* ]] || [[ "$*" == *"-x"* ]] || [[ "$*" == *"--add"* ]]; then
+    if [[ "$*" == *"--help"* ]] || [[ "$*" == *"-h"* ]] || [[ "$*" == *"-l"* ]] || [[ "$*" == *"-r"* ]] || [[ "$*" == *"-t"* ]] || [[ "$*" == *"-c"* ]] || [[ "$*" == *"-e"* ]] || [[ "$*" == *"-x"* ]] || [[ "$*" == *"--add"* ]] || [[ "$*" == *"--doctor"* ]]; then
         command zjyo "$@"
         return
     fi
@@ -152,7 +152,7 @@ cd() {
 ```fish
 function z
     # Handle all flags that don't require directory change (pass through to zjyo directly)
-    if contains -- "--help" $argv; or contains -- "-h" $argv; or contains -- "-l" $argv; or contains -- "-r" $argv; or contains -- "-t" $argv; or contains -- "-c" $argv; or contains -- "-e" $argv; or contains -- "-x" $argv; or contains -- "--add" $argv
+    if contains -- "--help" $argv; or contains -- "-h" $argv; or contains -- "-l" $argv; or contains -- "-r" $argv; or contains -- "-t" $argv; or contains -- "-c" $argv; or contains -- "-e" $argv; or contains -- "-x" $argv; or contains -- "--add" $argv; or contains -- "--doctor" $argv
         command zjyo $argv
         return
     end
@@ -194,6 +194,7 @@ z -t proj       # Match by recent access only
 z -c proj       # Restrict to subdirs of current directory
 z -e proj       # Echo match without changing directory
 z -x            # Remove current directory from database
+z --doctor      # Remove missing directories from database
 ```
 
 ### 🔧 Shell Completion
@@ -258,6 +259,7 @@ Options:
   -e, --echo     Echo the best match without changing directory
   -x, --remove   Remove current directory from database
       --add      Add current directory to database
+      --doctor   Remove database entries for missing directories
   -h, --help     Print help information
   -V, --version  Print version information
 ```
@@ -315,6 +317,7 @@ z --add                    # Add current directory
 
 # Remove directories
 z -x                       # Remove current directory from database
+z --doctor                 # Remove entries for missing directories
 rm ~/.z && touch ~/.z      # Nuclear option: clear entire database
 
 # Integration with other tools

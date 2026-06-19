@@ -158,7 +158,7 @@ show_usage() {
     echo
     echo "     For Bash/Zsh (~/.bashrc or ~/.zshrc):"
     echo '     z() {'
-    echo '         if [[ "$*" == *"--help"* ]] || [[ "$*" == *"-h"* ]] || [[ "$*" == *"-l"* ]] || [[ "$*" == *"-r"* ]] || [[ "$*" == *"-t"* ]] || [[ "$*" == *"-c"* ]] || [[ "$*" == *"-e"* ]] || [[ "$*" == *"-x"* ]] || [[ "$*" == *"--add"* ]]; then'
+    echo '         if [[ "$*" == *"--help"* ]] || [[ "$*" == *"-h"* ]] || [[ "$*" == *"-l"* ]] || [[ "$*" == *"-r"* ]] || [[ "$*" == *"-t"* ]] || [[ "$*" == *"-c"* ]] || [[ "$*" == *"-e"* ]] || [[ "$*" == *"-x"* ]] || [[ "$*" == *"--add"* ]] || [[ "$*" == *"--doctor"* ]]; then'
     echo '             command zjyo "$@"'
     echo '             return'
     echo '         fi'
@@ -175,7 +175,7 @@ show_usage() {
     echo
     echo "     For Fish (~/.config/fish/config.fish):"
     echo '     function z'
-    echo '         if contains -- "--help" $argv; or contains -- "-h" $argv; or contains -- "-l" $argv; or contains -- "-r" $argv; or contains -- "-t" $argv; or contains -- "-c" $argv; or contains -- "-e" $argv; or contains -- "-x" $argv; or contains -- "--add" $argv'
+    echo '         if contains -- "--help" $argv; or contains -- "-h" $argv; or contains -- "-l" $argv; or contains -- "-r" $argv; or contains -- "-t" $argv; or contains -- "-c" $argv; or contains -- "-e" $argv; or contains -- "-x" $argv; or contains -- "--add" $argv; or contains -- "--doctor" $argv'
     echo '             command zjyo $argv'
     echo '             return'
     echo '         end'

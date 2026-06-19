@@ -7,7 +7,7 @@ _zjyo() {
     COMPREPLY=()
     cur="${COMP_WORDS[COMP_CWORD]}"
     prev="${COMP_WORDS[COMP_CWORD-1]}"
-    opts="-l --list -r --rank -t --time -c --current -e --echo -x --remove --add -h --help -V --version"
+    opts="-l --list -r --rank -t --time -c --current -e --echo -x --remove --add --doctor -h --help -V --version"
 
     case "${prev}" in
         zjyo)

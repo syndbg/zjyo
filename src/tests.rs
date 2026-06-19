@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
 use std::time::{SystemTime, UNIX_EPOCH};
+use tempfile::tempdir;
 
 fn create_test_db() -> ZDatabase {
     let temp_file = format!(
@@ -178,16 +179,17 @@ fn test_aging_when_rank_exceeds_limit() {
 
 #[test]
 fn test_save_and_load() {
-    let temp_file = format!(
-        "/tmp/test_z_save_load_{}",
-        SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap()
-            .as_nanos()
-    );
+    let temp_dir = tempdir().unwrap();
+    let path1 = temp_dir.path().join("path1");
+    let path2 = temp_dir.path().join("path2");
+    fs::create_dir(&path1).unwrap();
+    fs::create_dir(&path2).unwrap();
+    let temp_file = temp_dir.path().join("zdata");
+    let path1 = path1.to_string_lossy().to_string();
+    let path2 = path2.to_string_lossy().to_string();
     let mut db = ZDatabase {
         entries: HashMap::new(),
-        data_file: PathBuf::from(&temp_file),
+        data_file: temp_file.clone(),
     };
 
     // Add some test data
@@ -195,14 +197,10 @@ fn test_save_and_load() {
         .duration_since(UNIX_EPOCH)
         .unwrap()
         .as_secs();
-    db.entries.insert(
-        "/test/path1".to_string(),
-        DirEntry::new("/test/path1".to_string(), 5.0, now),
-    );
-    db.entries.insert(
-        "/test/path2".to_string(),
-        DirEntry::new("/test/path2".to_string(), 3.0, now - 1000),
-    );
+    db.entries
+        .insert(path1.clone(), DirEntry::new(path1.clone(), 5.0, now));
+    db.entries
+        .insert(path2.clone(), DirEntry::new(path2.clone(), 3.0, now - 1000));
 
     // Save to file
     db.save();
@@ -210,19 +208,48 @@ fn test_save_and_load() {
     // Create new database and load
     let mut db2 = ZDatabase {
         entries: HashMap::new(),
-        data_file: PathBuf::from(&temp_file),
+        data_file: temp_file,
     };
     db2.load();
 
     // Should have same entries
     assert_eq!(db2.entries.len(), 2);
-    assert!(db2.entries.contains_key("/test/path1"));
-    assert!(db2.entries.contains_key("/test/path2"));
-    assert_eq!(db2.entries["/test/path1"].rank, 5.0);
-    assert_eq!(db2.entries["/test/path2"].rank, 3.0);
+    assert!(db2.entries.contains_key(&path1));
+    assert!(db2.entries.contains_key(&path2));
+    assert_eq!(db2.entries[&path1].rank, 5.0);
+    assert_eq!(db2.entries[&path2].rank, 3.0);
+}
 
-    // Cleanup
-    fs::remove_file(&temp_file).ok();
+#[test]
+fn test_load_skips_missing_directories() {
+    let temp_dir = tempdir().unwrap();
+    let existing_dir = temp_dir.path().join("work");
+    let missing_dir = temp_dir.path().join("example-");
+    fs::create_dir(&existing_dir).unwrap();
+
+    let data_file = temp_dir.path().join("zdata");
+    fs::write(
+        &data_file,
+        format!(
+            "{}|9999.0|1640995200\n{}|1.0|1640995200\n",
+            missing_dir.display(),
+            existing_dir.display()
+        ),
+    )
+    .unwrap();
+
+    let mut db = ZDatabase {
+        entries: HashMap::new(),
+        data_file,
+    };
+    db.load();
+
+    assert!(!db
+        .entries
+        .contains_key(&missing_dir.to_string_lossy().to_string()));
+    assert!(db
+        .entries
+        .contains_key(&existing_dir.to_string_lossy().to_string()));
 }
 
 #[test]

@@ -1,9 +1,9 @@
 use crate::entry::DirEntry;
 use std::collections::HashMap;
 use std::env;
-use std::fs::{File, OpenOptions};
+use std::fs::{self, File};
 use std::io::{BufRead, BufReader, Write};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 pub struct ZDatabase {
@@ -39,27 +39,40 @@ impl ZDatabase {
         if let Ok(file) = File::open(&self.data_file) {
             let reader = BufReader::new(file);
             for line in reader.lines().map_while(Result::ok) {
-                let parts: Vec<&str> = line.splitn(3, '|').collect();
-                if parts.len() == 3 {
-                    if let (Ok(rank), Ok(time)) = (parts[1].parse::<f64>(), parts[2].parse::<u64>())
-                    {
-                        let entry = DirEntry::new(parts[0].to_string(), rank, time);
-                        self.entries.insert(parts[0].to_string(), entry);
+                if let Some(entry) = Self::parse_entry(&line) {
+                    if Path::new(&entry.path).is_dir() {
+                        self.entries.insert(entry.path.clone(), entry);
                     }
                 }
             }
         }
     }
 
+    pub fn doctor(&mut self) -> usize {
+        let before = self.raw_entry_count();
+        self.entries.clear();
+        self.load();
+        let removed = before.saturating_sub(self.entries.len());
+        if removed > 0 {
+            self.save();
+        }
+        removed
+    }
+
     pub fn save(&self) {
-        if let Ok(mut file) = OpenOptions::new()
-            .write(true)
-            .create(true)
-            .truncate(true)
-            .open(&self.data_file)
-        {
+        let temp_file = self
+            .data_file
+            .with_extension(format!("tmp.{}", std::process::id()));
+
+        if let Ok(mut file) = File::create(&temp_file) {
             for entry in self.entries.values() {
                 writeln!(file, "{}|{}|{}", entry.path, entry.rank, entry.time).ok();
+            }
+
+            if file.sync_all().is_ok() {
+                fs::rename(&temp_file, &self.data_file).ok();
+            } else {
+                fs::remove_file(&temp_file).ok();
             }
         }
     }
@@ -164,7 +177,31 @@ impl ZDatabase {
             .cloned()
             .collect();
 
-        matches.sort_by(|a, b| b.time.cmp(&a.time));
+        matches.sort_by_key(|b| std::cmp::Reverse(b.time));
         matches
+    }
+
+    fn raw_entry_count(&self) -> usize {
+        File::open(&self.data_file)
+            .ok()
+            .map(|file| {
+                BufReader::new(file)
+                    .lines()
+                    .map_while(Result::ok)
+                    .filter(|line| Self::parse_entry(line).is_some())
+                    .count()
+            })
+            .unwrap_or(0)
+    }
+
+    fn parse_entry(line: &str) -> Option<DirEntry> {
+        let parts: Vec<&str> = line.splitn(3, '|').collect();
+        if parts.len() != 3 {
+            return None;
+        }
+
+        let rank = parts[1].parse::<f64>().ok()?;
+        let time = parts[2].parse::<u64>().ok()?;
+        Some(DirEntry::new(parts[0].to_string(), rank, time))
     }
 }
