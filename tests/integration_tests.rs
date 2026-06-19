@@ -3,6 +3,7 @@ use std::fs;
 use std::path::PathBuf;
 use std::process::Command;
 use std::time::{SystemTime, UNIX_EPOCH};
+use tempfile::tempdir;
 
 fn get_binary_path() -> PathBuf {
     let mut path = env::current_dir().unwrap();
@@ -66,9 +67,13 @@ fn test_help_output() {
 #[test]
 fn test_add_and_list() {
     let temp_data = create_temp_data_file();
+    let temp_dir = tempdir().unwrap();
+    let test_dir = temp_dir.path().join("test_dir");
+    fs::create_dir(&test_dir).unwrap();
+    let test_dir = test_dir.to_string_lossy().to_string();
 
     // Create test database with known entry
-    let test_db_content = "/tmp/test_dir|1.0|1640995200\n";
+    let test_db_content = format!("{}|1.0|1640995200\n", test_dir);
     fs::write(&temp_data, test_db_content).expect("Failed to write test data");
 
     // List directories
@@ -80,7 +85,7 @@ fn test_add_and_list() {
 
     assert!(output.status.success());
     let list_output = String::from_utf8(output.stdout).unwrap();
-    assert!(list_output.contains("/tmp/test_dir"));
+    assert!(list_output.contains(&test_dir));
 
     // Cleanup
     fs::remove_file(&temp_data).ok();
@@ -89,10 +94,19 @@ fn test_add_and_list() {
 #[test]
 fn test_pattern_matching() {
     let temp_data = create_temp_data_file();
+    let temp_dir = tempdir().unwrap();
+    let projects = temp_dir.path().join("projects");
+    let documents = temp_dir.path().join("documents");
+    fs::create_dir(&projects).unwrap();
+    fs::create_dir(&documents).unwrap();
+    let projects = projects.to_string_lossy().to_string();
+    let documents = documents.to_string_lossy().to_string();
 
     // Manually create a test database file
-    let test_db_content =
-        "/home/user/projects|5.0|1640995200\n/home/user/documents|3.0|1640995100\n";
+    let test_db_content = format!(
+        "{}|5.0|1640995200\n{}|3.0|1640995100\n",
+        projects, documents
+    );
     fs::write(&temp_data, test_db_content).expect("Failed to write test data");
 
     // Test pattern matching
@@ -105,7 +119,7 @@ fn test_pattern_matching() {
 
     assert!(output.status.success());
     let match_output = String::from_utf8(output.stdout).unwrap();
-    assert!(match_output.contains("/home/user/projects"));
+    assert!(match_output.contains(&projects));
 
     // Cleanup
     fs::remove_file(&temp_data).ok();
@@ -114,6 +128,17 @@ fn test_pattern_matching() {
 #[test]
 fn test_rank_sorting() {
     let temp_data = create_temp_data_file();
+    let temp_dir = tempdir().unwrap();
+    let base = temp_dir.path().join("path");
+    let low = base.join("low");
+    let high = base.join("high");
+    let medium = base.join("medium");
+    fs::create_dir_all(&low).unwrap();
+    fs::create_dir_all(&high).unwrap();
+    fs::create_dir_all(&medium).unwrap();
+    let low = low.to_string_lossy().to_string();
+    let high = high.to_string_lossy().to_string();
+    let medium = medium.to_string_lossy().to_string();
 
     // Create database with different ranks
     let now = SystemTime::now()
@@ -121,8 +146,8 @@ fn test_rank_sorting() {
         .unwrap()
         .as_secs();
     let test_db_content = format!(
-        "/path/low|2.0|{}\n/path/high|10.0|{}\n/path/medium|5.0|{}\n",
-        now, now, now
+        "{}|2.0|{}\n{}|10.0|{}\n{}|5.0|{}\n",
+        low, now, high, now, medium, now
     );
     fs::write(&temp_data, test_db_content).expect("Failed to write test data");
 
@@ -140,9 +165,9 @@ fn test_rank_sorting() {
     let lines: Vec<&str> = list_output.lines().collect();
 
     // Should be sorted by rank (highest first)
-    assert!(lines[0].contains("/path/high"));
-    assert!(lines[1].contains("/path/medium"));
-    assert!(lines[2].contains("/path/low"));
+    assert!(lines[0].contains(&high));
+    assert!(lines[1].contains(&medium));
+    assert!(lines[2].contains(&low));
 
     // Cleanup
     fs::remove_file(&temp_data).ok();
@@ -151,6 +176,17 @@ fn test_rank_sorting() {
 #[test]
 fn test_time_sorting() {
     let temp_data = create_temp_data_file();
+    let temp_dir = tempdir().unwrap();
+    let base = temp_dir.path().join("path");
+    let old = base.join("old");
+    let new = base.join("new");
+    let middle = base.join("middle");
+    fs::create_dir_all(&old).unwrap();
+    fs::create_dir_all(&new).unwrap();
+    fs::create_dir_all(&middle).unwrap();
+    let old = old.to_string_lossy().to_string();
+    let new = new.to_string_lossy().to_string();
+    let middle = middle.to_string_lossy().to_string();
 
     let now = SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -159,9 +195,12 @@ fn test_time_sorting() {
 
     // Create database with different timestamps
     let test_db_content = format!(
-        "/path/old|5.0|{}\n/path/new|5.0|{}\n/path/middle|5.0|{}\n",
+        "{}|5.0|{}\n{}|5.0|{}\n{}|5.0|{}\n",
+        old,
         now - 1000,
+        new,
         now,
+        middle,
         now - 500
     );
     fs::write(&temp_data, test_db_content).expect("Failed to write test data");
@@ -180,9 +219,9 @@ fn test_time_sorting() {
     let lines: Vec<&str> = list_output.lines().collect();
 
     // Should be sorted by time (most recent first)
-    assert!(lines[0].contains("/path/new"));
-    assert!(lines[1].contains("/path/middle"));
-    assert!(lines[2].contains("/path/old"));
+    assert!(lines[0].contains(&new));
+    assert!(lines[1].contains(&middle));
+    assert!(lines[2].contains(&old));
 
     // Cleanup
     fs::remove_file(&temp_data).ok();
@@ -191,12 +230,16 @@ fn test_time_sorting() {
 #[test]
 fn test_remove_directory() {
     let temp_data = create_temp_data_file();
+    let temp_dir = tempdir().unwrap();
+    let to_keep = temp_dir.path().join("to_keep");
+    fs::create_dir(&to_keep).unwrap();
+    let to_keep = to_keep.to_string_lossy().to_string();
 
     // Create database with test entries using current working directory
     let current_dir = env::current_dir().unwrap().to_string_lossy().to_string();
     let test_db_content = format!(
-        "{}|5.0|1640995200\n/tmp/to_keep|3.0|1640995100\n",
-        current_dir
+        "{}|5.0|1640995200\n{}|3.0|1640995100\n",
+        current_dir, to_keep
     );
     fs::write(&temp_data, test_db_content).expect("Failed to write test data");
 
@@ -218,7 +261,7 @@ fn test_remove_directory() {
 
     let list_output = String::from_utf8(output.stdout).unwrap();
     assert!(!list_output.contains(&current_dir));
-    assert!(list_output.contains("/tmp/to_keep"));
+    assert!(list_output.contains(&to_keep));
 
     // Cleanup
     fs::remove_file(&temp_data).ok();
@@ -227,9 +270,13 @@ fn test_remove_directory() {
 #[test]
 fn test_no_matches() {
     let temp_data = create_temp_data_file();
+    let temp_dir = tempdir().unwrap();
+    let projects = temp_dir.path().join("projects");
+    fs::create_dir(&projects).unwrap();
+    let projects = projects.to_string_lossy().to_string();
 
     // Create database with test entries
-    let test_db_content = "/home/user/projects|5.0|1640995200\n";
+    let test_db_content = format!("{}|5.0|1640995200\n", projects);
     fs::write(&temp_data, test_db_content).expect("Failed to write test data");
 
     // Search for non-existent pattern
@@ -252,9 +299,13 @@ fn test_no_matches() {
 #[test]
 fn test_case_insensitive_matching() {
     let temp_data = create_temp_data_file();
+    let temp_dir = tempdir().unwrap();
+    let projects = temp_dir.path().join("Projects");
+    fs::create_dir(&projects).unwrap();
+    let projects = projects.to_string_lossy().to_string();
 
     // Create database with test entries
-    let test_db_content = "/home/user/Projects|5.0|1640995200\n";
+    let test_db_content = format!("{}|5.0|1640995200\n", projects);
     fs::write(&temp_data, test_db_content).expect("Failed to write test data");
 
     // Test case insensitive matching
@@ -267,7 +318,7 @@ fn test_case_insensitive_matching() {
 
     assert!(output.status.success());
     let match_output = String::from_utf8(output.stdout).unwrap();
-    assert!(match_output.contains("/home/user/Projects"));
+    assert!(match_output.contains(&projects));
 
     // Cleanup
     fs::remove_file(&temp_data).ok();

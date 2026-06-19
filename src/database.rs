@@ -1,9 +1,9 @@
 use crate::entry::DirEntry;
 use std::collections::HashMap;
 use std::env;
-use std::fs::{File, OpenOptions};
+use std::fs::{self, File};
 use std::io::{BufRead, BufReader, Write};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 pub struct ZDatabase {
@@ -43,8 +43,10 @@ impl ZDatabase {
                 if parts.len() == 3 {
                     if let (Ok(rank), Ok(time)) = (parts[1].parse::<f64>(), parts[2].parse::<u64>())
                     {
-                        let entry = DirEntry::new(parts[0].to_string(), rank, time);
-                        self.entries.insert(parts[0].to_string(), entry);
+                        if Path::new(parts[0]).is_dir() {
+                            let entry = DirEntry::new(parts[0].to_string(), rank, time);
+                            self.entries.insert(parts[0].to_string(), entry);
+                        }
                     }
                 }
             }
@@ -52,14 +54,19 @@ impl ZDatabase {
     }
 
     pub fn save(&self) {
-        if let Ok(mut file) = OpenOptions::new()
-            .write(true)
-            .create(true)
-            .truncate(true)
-            .open(&self.data_file)
-        {
+        let temp_file = self
+            .data_file
+            .with_extension(format!("tmp.{}", std::process::id()));
+
+        if let Ok(mut file) = File::create(&temp_file) {
             for entry in self.entries.values() {
                 writeln!(file, "{}|{}|{}", entry.path, entry.rank, entry.time).ok();
+            }
+
+            if file.sync_all().is_ok() {
+                fs::rename(&temp_file, &self.data_file).ok();
+            } else {
+                fs::remove_file(&temp_file).ok();
             }
         }
     }
@@ -164,7 +171,7 @@ impl ZDatabase {
             .cloned()
             .collect();
 
-        matches.sort_by(|a, b| b.time.cmp(&a.time));
+        matches.sort_by_key(|b| std::cmp::Reverse(b.time));
         matches
     }
 }
