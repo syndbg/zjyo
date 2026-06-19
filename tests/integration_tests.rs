@@ -2,8 +2,11 @@ use std::env;
 use std::fs;
 use std::path::PathBuf;
 use std::process::Command;
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::{SystemTime, UNIX_EPOCH};
 use tempfile::tempdir;
+
+static TEMP_DATA_COUNTER: AtomicUsize = AtomicUsize::new(0);
 
 fn get_binary_path() -> PathBuf {
     let mut path = env::current_dir().unwrap();
@@ -40,8 +43,9 @@ fn get_binary_path() -> PathBuf {
 
 fn create_temp_data_file() -> String {
     format!(
-        "/tmp/test_zjyo_integration_{}_{}",
+        "/tmp/test_zjyo_integration_{}_{}_{}",
         std::process::id(),
+        TEMP_DATA_COUNTER.fetch_add(1, Ordering::SeqCst),
         SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .unwrap()
