@@ -53,9 +53,21 @@ pub fn run() {
                 .help("Add current directory to database")
                 .action(clap::ArgAction::SetTrue),
         )
+        .arg(
+            Arg::new("doctor")
+                .long("doctor")
+                .help("Remove database entries for missing directories")
+                .action(clap::ArgAction::SetTrue),
+        )
         .get_matches();
 
     let mut db = ZDatabase::new();
+
+    if matches.get_flag("doctor") {
+        let removed = db.doctor();
+        eprintln!("Removed {} stale entries", removed);
+        return;
+    }
 
     if matches.get_flag("add") {
         if let Ok(current_dir) = env::current_dir() {

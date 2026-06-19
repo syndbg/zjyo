@@ -16,6 +16,7 @@ _zjyo() {
         '(-e --echo)'{-e,--echo}'[Echo the best match without changing directory]' \
         '(-x --remove)'{-x,--remove}'[Remove current directory from database]' \
         '--add[Add current directory to database]' \
+        '--doctor[Remove database entries for missing directories]' \
         '(-h --help)'{-h,--help}'[Print help information]' \
         '(-V --version)'{-V,--version}'[Print version information]' \
         '*:pattern:_zjyo_patterns'

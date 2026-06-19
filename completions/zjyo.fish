@@ -17,6 +17,7 @@ complete -c zjyo -s c -l current -d "Restrict matches to subdirectories of curre
 complete -c zjyo -s e -l echo -d "Echo the best match without changing directory"
 complete -c zjyo -s x -l remove -d "Remove current directory from database"
 complete -c zjyo -l add -d "Add current directory to database"
+complete -c zjyo -l doctor -d "Remove database entries for missing directories"
 complete -c zjyo -s h -l help -d "Print help information"
 complete -c zjyo -s V -l version -d "Print version information"
 
@@ -32,5 +33,6 @@ complete -c z -s c -l current -d "Restrict matches to subdirectories of current 
 complete -c z -s e -l echo -d "Echo the best match without changing directory"
 complete -c z -s x -l remove -d "Remove current directory from database"
 complete -c z -l add -d "Add current directory to database"
+complete -c z -l doctor -d "Remove database entries for missing directories"
 complete -c z -s h -l help -d "Print help information"
 complete -c z -a "(__zjyo_patterns)" -d "Directory pattern"

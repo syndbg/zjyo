@@ -40,7 +40,8 @@ fn get_binary_path() -> PathBuf {
 
 fn create_temp_data_file() -> String {
     format!(
-        "/tmp/test_zjyo_integration_{}",
+        "/tmp/test_zjyo_integration_{}_{}",
+        std::process::id(),
         SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .unwrap()
@@ -62,6 +63,7 @@ fn test_help_output() {
     assert!(help_text.contains("-l"));
     assert!(help_text.contains("-r"));
     assert!(help_text.contains("-t"));
+    assert!(help_text.contains("--doctor"));
 }
 
 #[test]
@@ -88,6 +90,44 @@ fn test_add_and_list() {
     assert!(list_output.contains(&test_dir));
 
     // Cleanup
+    fs::remove_file(&temp_data).ok();
+}
+
+#[test]
+fn test_doctor_removes_missing_directories() {
+    let temp_data = create_temp_data_file();
+    let temp_dir = tempdir().unwrap();
+    let existing = temp_dir.path().join("work");
+    let missing = temp_dir.path().join("example-");
+    fs::create_dir(&existing).unwrap();
+    let existing = existing.to_string_lossy().to_string();
+    let missing = missing.to_string_lossy().to_string();
+
+    fs::write(
+        &temp_data,
+        format!(
+            "{}|9999.0|1640995200\n{}|1.0|1640995200\n",
+            missing, existing
+        ),
+    )
+    .expect("Failed to write test data");
+
+    let output = Command::new(get_binary_path())
+        .arg("--doctor")
+        .env("_Z_DATA", &temp_data)
+        .output()
+        .expect("Failed to execute command");
+
+    assert!(output.status.success());
+    assert!(String::from_utf8(output.stdout).unwrap().trim().is_empty());
+    assert!(String::from_utf8(output.stderr)
+        .unwrap()
+        .contains("Removed 1 stale entries"));
+
+    let data = fs::read_to_string(&temp_data).unwrap();
+    assert!(!data.contains(&missing));
+    assert!(data.contains(&existing));
+
     fs::remove_file(&temp_data).ok();
 }
 
