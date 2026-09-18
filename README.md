@@ -5,109 +5,85 @@
 [![Crates.io](https://img.shields.io/crates/v/zjyo.svg)](https://crates.io/crates/zjyo)
 [![Downloads](https://img.shields.io/crates/d/zjyo.svg)](https://crates.io/crates/zjyo)
 
-A Rust implementation of the popular "z" directory navigation tool. This is a 1:1 port of [rupa/z](https://github.com/rupa/z) that maintains complete compatibility with the original while being implemented in Rust for better performance and reliability.
+A Rust port of [rupa/z](https://github.com/rupa/z): same algorithm, same database format, same commands. Rewritten in Rust mainly so the binary starts fast and doesn't depend on a shell interpreter for the matching logic.
 
-The name comes from "z is the new j, yo" that was the description
- of rupa's z once upon a time and hence the name `zjyo`.
+The name comes from "z is the new j, yo", the description rupa's z used to carry.
 
-## 🎬 Demo
+## Demo
 
 ![zjyo demo](.github/assets/demo.gif)
 
-## Why zjyo?
+## Why this exists
 
-After trying various directory jumping tools like `jump`, `zoxide`, and others, I found they all added unnecessary complexity or changed the behavior I was used to. All I wanted was a simple tool that uses the exact same algorithm as the original `z`, providing seamless integration without learning new commands or behaviors.
+I tried `jump`, `zoxide`, and a few others before writing this. Each one changed the interface or the ranking behavior in ways I didn't want to relearn. What I actually wanted was the original `z` algorithm and database format, just not implemented in shell script.
 
-zjyo delivers exactly that:
-- **100% compatible** with original z algorithm and database format
-- **Same commands** - no need to relearn anything
-- **Faster execution** thanks to Rust's performance
-- **Cross-platform** support (Linux, macOS, Unix-like systems)
-- **Minimal dependencies** - just works
+zjyo is that: a drop-in for `z`, same frecency ranking, same `~/.z` file layout, so it works interchangeably with the original if you ever need to fall back.
+
+| Tool | Language | Database format | Algorithm |
+|------|----------|------------------|-----------|
+| **zjyo** | Rust | z-compatible | original z |
+| [rupa/z](https://github.com/rupa/z) | Shell | original | original |
+| [zoxide](https://github.com/ajeetdsouza/zoxide) | Rust | custom | different |
+| [jump](https://github.com/gsamokovarov/jump) | Go | custom | different |
+| [fasd](https://github.com/clvv/fasd) | Shell | custom | different |
+
+## Features
+
+- Drop-in replacement for [rupa/z](https://github.com/rupa/z), same commands and database
+- Frecency ranking that balances visit frequency and recency
+- Cross-platform: Linux, macOS, other Unix-like systems
+- No runtime dependencies beyond a shell for the wrapper function
+
+## Installation
+
+### Homebrew (recommended)
 
 ```bash
-# After using directories...
-cd ~/projects/rust-project
-cd ~/documents/important-notes
-cd ~/downloads/tools
-
-# Jump instantly with fuzzy matching
-z rust     # → ~/projects/rust-project
-z notes    # → ~/documents/important-notes
-z tool     # → ~/downloads/tools
+brew install --HEAD syndbg/tap/zjyo
 ```
 
-## Comparison with Other Tools
+Builds from `main` on macOS or Linux. To check for a newer commit:
 
-| Tool | Language | Database Compatibility | Algorithm | Learning Curve |
-|------|----------|------------------------|-----------|----------------|
-| **zjyo** | Rust | ✅ z compatible | ✅ Original z | None - same as z |
-| [rupa/z](https://github.com/rupa/z) | Shell | ✅ Original | ✅ Original | None |
-| [zoxide](https://github.com/ajeetdsouza/zoxide) | Rust | ❌ Custom | ❌ Different | New commands (`zi`, etc.) |
-| [jump](https://github.com/gsamokovarov/jump) | Go | ❌ Custom | ❌ Different | New interface |
-| [fasd](https://github.com/clvv/fasd) | Shell | ❌ Custom | ❌ Different | Complex options |
+```bash
+brew upgrade --fetch-HEAD syndbg/tap/zjyo
+```
 
-### Why Choose zjyo?
+A stable formula (`brew install syndbg/tap/zjyo`, no `--HEAD`) is also available, pinned to the latest tagged release.
 
-**If you're already using z**: Drop-in replacement with better performance and reliability.
-
-**If you're new to directory jumping**: Learn one tool that's been proven for over a decade.
-
-**If you tried other tools**: Get back to the simplicity and predictability of the original z algorithm.
-
-**If you value compatibility**: Use the same database format and commands across different machines and implementations.
-
-## ✨ Features
-
-- 🔥 **100% Compatible** - Drop-in replacement for [rupa/z](https://github.com/rupa/z)
-- ⚡ **Blazingly Fast** - Built with Rust for optimal performance
-- 🗄️ **Same Database** - Uses identical format and algorithm as original z
-- 🔀 **Cross-Platform** - Works on Linux, macOS, and other Unix-like systems
-- 📊 **Smart Frecency** - Balances frequency and recency for intelligent navigation
-- 🎯 **Zero Learning Curve** - Identical commands and behavior to original z
-- 🛡️ **Memory Safe** - Rust's safety guarantees prevent crashes and data corruption
-- 📦 **Minimal Dependencies** - Lightweight with fast startup time
-
-## 🚀 Quick Start
-
-### 📦 Installation
-
-#### **Quick Install Script (Recommended)**
+### Quick install script
 
 ```bash
 curl -sSL https://github.com/syndbg/zjyo/raw/main/install.sh | bash
 ```
 
-#### **Cargo**
+### Cargo
 
 ```bash
 cargo install zjyo
 ```
 
-#### **Pre-built Binaries**
+### Pre-built binaries
 
 Download from [Releases](https://github.com/syndbg/zjyo/releases/latest):
 
 **Linux:**
 ```bash
-# Download and install .deb package
 curl -L -O https://github.com/syndbg/zjyo/releases/latest/download/zjyo_amd64.deb
 sudo dpkg -i zjyo_amd64.deb
 
-# Or .rpm for Red Hat/CentOS/Fedora
+# or .rpm for Red Hat/CentOS/Fedora
 curl -L -O https://github.com/syndbg/zjyo/releases/latest/download/zjyo_x86_64.rpm
 sudo rpm -i zjyo_x86_64.rpm
 ```
 
 **macOS:**
 ```bash
-# Download binary
 curl -L -O https://github.com/syndbg/zjyo/releases/latest/download/zjyo-macos
 chmod +x zjyo-macos
 sudo mv zjyo-macos /usr/local/bin/zjyo
 ```
 
-#### **Build from Source**
+### Build from source
 
 ```bash
 git clone https://github.com/syndbg/zjyo.git
@@ -116,16 +92,16 @@ cargo build --release
 sudo cp target/release/zjyo /usr/local/bin/
 ```
 
-### 🔧 Shell Integration
+## Shell integration
 
-Since binaries can't change your shell's directory, add these wrapper functions:
+The binary can't change your shell's working directory on its own, so it needs a wrapper function plus a hook that tracks directories as you move around.
 
-#### **Bash/Zsh** (`.bashrc` or `.zshrc`)
+Use the shell's prompt command (`precmd`) to track directories, not a `cd` override. This is what upstream `z` does. It fires on any directory change, not just explicit `cd` calls, and it doesn't get silently clobbered if another plugin also redefines `cd`. Run `zjyo --doctor` to check whether the hook is installed; see [Database](#database) below.
+
+### Bash/Zsh (`.bashrc` or `.zshrc`)
 
 ```bash
-# zjyo wrapper function
 z() {
-    # Handle all flags that don't require directory change (pass through to zjyo directly)
     if [[ "$*" == *"--help"* ]] || [[ "$*" == *"-h"* ]] || [[ "$*" == *"-l"* ]] || [[ "$*" == *"-r"* ]] || [[ "$*" == *"-t"* ]] || [[ "$*" == *"-c"* ]] || [[ "$*" == *"-e"* ]] || [[ "$*" == *"-x"* ]] || [[ "$*" == *"--add"* ]] || [[ "$*" == *"--doctor"* ]]; then
         command zjyo "$@"
         return
@@ -141,17 +117,22 @@ z() {
     fi
 }
 
-# Auto-track directories when using cd
-cd() {
-    builtin cd "$@" && zjyo --add
+# zsh: track directories via precmd, matches upstream z's approach
+_zjyo_precmd() {
+    (zjyo --add &)
 }
+[[ -n "$ZSH_VERSION" ]] && precmd_functions+=(_zjyo_precmd)
+
+# bash has no precmd_functions array; use PROMPT_COMMAND instead
+if [[ -n "$BASH_VERSION" ]]; then
+    PROMPT_COMMAND="(zjyo --add &);${PROMPT_COMMAND}"
+fi
 ```
 
-#### **Fish Shell**
+### Fish shell
 
 ```fish
 function z
-    # Handle all flags that don't require directory change (pass through to zjyo directly)
     if contains -- "--help" $argv; or contains -- "-h" $argv; or contains -- "-l" $argv; or contains -- "-r" $argv; or contains -- "-t" $argv; or contains -- "-c" $argv; or contains -- "-e" $argv; or contains -- "-x" $argv; or contains -- "--add" $argv; or contains -- "--doctor" $argv
         command zjyo $argv
         return
@@ -167,13 +148,12 @@ function z
     end
 end
 
-# Auto-track directories when using cd
 function cd
     builtin cd $argv; and zjyo --add
 end
 ```
 
-### 🎯 Basic Usage
+### Basic usage
 
 ```bash
 # Track current directory
@@ -197,53 +177,51 @@ z -x            # Remove current directory from database
 z --doctor      # Remove missing directories from database
 ```
 
-### 🔧 Shell Completion
+## Shell completion
 
-zjyo includes shell completion for commands and directory patterns:
-
-#### **Bash**
+### Bash
 ```bash
 # Add to ~/.bashrc
 source /path/to/zjyo/completions/zjyo.bash
 ```
 
-#### **Zsh**
+### Zsh
 ```bash
 # Add to ~/.zshrc or place in fpath
 fpath=(~/.config/zjyo/completions $fpath)
 # Then copy: cp completions/zjyo.zsh ~/.config/zjyo/completions/_zjyo
 ```
 
-#### **Fish**
+### Fish
 ```bash
-# Copy to fish completions directory
 cp completions/zjyo.fish ~/.config/fish/completions/
 ```
 
-**Smart Completions**: The completions intelligently suggest directory patterns from your actual z database!
+Completions suggest directory patterns pulled from your actual `.z` database.
 
-## 📊 How It Works
+## How it works
 
-### **Frecency Algorithm**
+### Frecency algorithm
 
-zjyo uses the same proven algorithm as the original z:
+Same formula as the original z:
 
 ```
 frecency = 10000 * rank * (3.75 / ((0.0001 * age_in_seconds + 1) + 0.25))
 ```
 
-- **Rank** - Increments each visit (frequency)
-- **Age** - Time since last visit (recency)
-- **Balance** - Recent visits outweigh old frequent ones
+- **Rank** increments on each visit (frequency)
+- **Age** is time since last visit (recency)
+- Recent visits outweigh old frequent ones, but don't erase them outright
 
-### **Smart Database Management**
+### Database
 
-- 📁 **Location**: `~/.z` (or `$_Z_DATA` environment variable)
-- 📝 **Format**: `/path/to/directory|rank|timestamp` (z-compatible)
-- 🧹 **Auto-cleanup**: Aging when total ranks exceed 9000
-- 🗑️ **Garbage collection**: Removes directories with rank < 1.0
+- Location: `~/.z` (or `$_Z_DATA`)
+- Format: `/path/to/directory|rank|timestamp`, one entry per line, compatible with the original z
+- Aging: when total rank across all entries exceeds 9000, every rank is multiplied by 0.99
+- Garbage collection: entries with rank below 1.0 after aging are dropped
+- `--doctor` reloads the database and drops any entry whose directory no longer exists on disk, then rewrites the file if anything was removed. It also checks whether a `precmd`/`PROMPT_COMMAND` hook that calls `zjyo --add` is present in your shell's rc file, and reports whether it found one.
 
-## 📖 Complete CLI Reference
+## CLI reference
 
 ```
 Usage: zjyo [OPTIONS] [PATTERN]
@@ -261,12 +239,9 @@ Options:
       --add      Add current directory to database
       --doctor   Remove database entries for missing directories
   -h, --help     Print help information
-  -V, --version  Print version information
 ```
 
-## 💡 Usage Examples
-
-### **Basic Navigation**
+## Usage examples
 
 ```bash
 # Build up your database
@@ -279,88 +254,50 @@ z awesome    # → ~/projects/awesome-rust-project
 z rep        # → ~/documents/work/reports
 z dev tool   # → ~/downloads/development-tools
 
-# Check your frecency scores
 z -l
-# Output:
 #   25000      5.0        /home/user/projects/awesome-rust-project
 #   15000      3.0        /home/user/documents/work/reports
 #   10000      2.0        /home/user/downloads/development-tools
-```
 
-### **Advanced Patterns**
-
-```bash
-# Multiple word matching - ALL words must be in the path
+# Multiple word matching - all words must be in the path
 z rust proj    # Matches directories containing both "rust" and "proj"
-z work doc     # Matches directories with "work" and "doc"
-z projects api # Matches directories with both "projects" and "api"
 
-# Rank-based navigation (frequency wins)
-z -r config    # Jump to most frequently accessed config directory
+# Rank-based navigation (frequency wins over recency)
+z -r config
 
-# Time-based navigation (recency wins)
-z -t temp      # Jump to most recently accessed temp directory
+# Time-based navigation (recency wins over frequency)
+z -t temp
 
 # Current directory restriction
 cd ~/projects
 z -c rust      # Only match rust directories under ~/projects
 
 # Preview without jumping
-z -e backend   # Print the match without cd'ing
-```
+z -e backend
 
-### **Database Management**
-
-```bash
-# Manual tracking
-z --add                    # Add current directory
-
-# Remove directories
+# Database management
 z -x                       # Remove current directory from database
 z --doctor                 # Remove entries for missing directories
-rm ~/.z && touch ~/.z      # Nuclear option: clear entire database
-
-# Integration with other tools
-z -l | grep "old-project" | cut -d' ' -f3- | xargs rm -rf  # Cleanup old projects
+rm ~/.z && touch ~/.z      # Clear entire database
 ```
 
-## 🔧 Configuration
-
-### **Environment Variables**
+## Configuration
 
 - `_Z_DATA` - Database location (default: `~/.z`)
 
-## 🤝 Contributing
+## Contributing
 
-We welcome contributions! Whether you're fixing bugs, adding features, improving documentation, or optimizing performance - every contribution helps make zjyo better.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, code style, testing, and the pull request process.
 
-**👉 See our comprehensive [Contributing Guidelines](CONTRIBUTING.md) for:**
-- Development setup and prerequisites
-- Code style and testing guidelines
-- Pull request process and review criteria
-- Architecture principles and design goals
+## License
 
-**Quick start:** Fork → Branch → Code → Test → PR 🚀
+Apache License 2.0. See [LICENSE](LICENSE).
 
-## 📄 License
+## Acknowledgments
 
-This project is licensed under the **Apache License 2.0** - see the [LICENSE](LICENSE) file for details.
+- [rupa](https://github.com/rupa) for the original z tool and algorithm
+- [Contributors](https://github.com/syndbg/zjyo/graphs/contributors)
 
-The Apache 2.0 license ensures:
-- ✅ Commercial use allowed
-- ✅ Modification allowed
-- ✅ Distribution allowed
-- ✅ Patent use allowed
-- ⚠️ Must include license and copyright
-- ⚠️ Changes must be documented
-
-## 🙏 Acknowledgments
-
-- **[rupa](https://github.com/rupa)** - Creator of the original z tool
-- **[Rust Community](https://www.rust-lang.org/community)** - For the amazing ecosystem
-- **[All Contributors](https://github.com/syndbg/zjyo/graphs/contributors)** - Making zjyo better
 ---
 
-**⚡ Jump faster. Navigate smarter. Stay compatible.**
-
-*Made with ❤️ and ⚡ by [Anton Antonov](https://github.com/syndbg)*
+*Made by [Anton Antonov](https://github.com/syndbg)*
