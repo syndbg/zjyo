@@ -2,8 +2,6 @@
 
 [![PR checks](https://github.com/syndbg/zjyo/actions/workflows/on_pr.yml/badge.svg)](https://github.com/syndbg/zjyo/actions/workflows/on_pr.yml)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
-[![Crates.io](https://img.shields.io/crates/v/zjyo.svg)](https://crates.io/crates/zjyo)
-[![Downloads](https://img.shields.io/crates/d/zjyo.svg)](https://crates.io/crates/zjyo)
 
 A Rust port of [rupa/z](https://github.com/rupa/z): same algorithm, same database format, same commands. Rewritten in Rust mainly so the binary starts fast and doesn't depend on a shell interpreter for the matching logic.
 
@@ -54,12 +52,6 @@ A stable formula (`brew install syndbg/tap/zjyo`, no `--HEAD`) is also available
 
 ```bash
 curl -sSL https://github.com/syndbg/zjyo/raw/main/install.sh | bash
-```
-
-### Cargo
-
-```bash
-cargo install zjyo
 ```
 
 ### Pre-built binaries
