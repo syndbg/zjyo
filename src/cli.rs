@@ -1,7 +1,7 @@
 use crate::database::ZDatabase;
 use clap::{Arg, Command};
 use std::env;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 pub fn run() {
     let matches = Command::new("zjyo")
@@ -66,6 +66,7 @@ pub fn run() {
     if matches.get_flag("doctor") {
         let removed = db.doctor();
         eprintln!("Removed {} stale entries", removed);
+        report_hook_status();
         return;
     }
 
@@ -130,5 +131,29 @@ pub fn run() {
     } else if !pattern.is_empty() {
         eprintln!("z: no matches found for: {}", pattern);
         std::process::exit(1);
+    }
+}
+
+fn report_hook_status() {
+    let Some(home) = home::home_dir() else {
+        return;
+    };
+
+    let rc_files: &[&str] = match env::var("SHELL").as_deref() {
+        Ok(s) if s.contains("fish") => &[".config/fish/config.fish"],
+        Ok(s) if s.contains("bash") => &[".bashrc", ".bash_profile"],
+        _ => &[".zshrc"],
+    };
+
+    let hook_present = rc_files
+        .iter()
+        .map(|rc| home.join(rc))
+        .filter_map(|path: PathBuf| std::fs::read_to_string(path).ok())
+        .any(|contents| contents.contains("zjyo") && contents.contains("--add"));
+
+    if hook_present {
+        eprintln!("Hook: found (zjyo --add is wired into your shell rc)");
+    } else {
+        eprintln!("Hook: not found. Add a precmd/PROMPT_COMMAND hook that calls `zjyo --add` to your shell rc, see README.");
     }
 }
