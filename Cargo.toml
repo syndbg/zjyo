@@ -1,6 +1,6 @@
 [package]
 name = "zjyo"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2021"
 authors = ["Anton Antonov <anton.synd.antonov@gmail.com>"]
 description = "zjyo - A Rust implementation of the popular rupa/z directory navigation tool - tracks most used directories based on frecency"
