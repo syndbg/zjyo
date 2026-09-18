@@ -8,7 +8,7 @@ concurrency:
   cancel-in-progress: false
 
 permissions:
-  contents: write
+  contents: read
 
 env:
   CARGO_TERM_COLOR: always
@@ -19,8 +19,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Install Rust
         run: |
@@ -53,42 +51,3 @@ jobs:
 
       - name: Run tests
         run: cargo test --verbose --all-features --workspace
-
-  tag-release:
-    name: Tag release
-    runs-on: ubuntu-latest
-    needs: [test]
-    if: "!startsWith(github.event.head_commit.message, 'chore: release')"
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Install Rust
-        run: |
-          rustup default stable
-          rustup update
-          rustup show
-          cargo -Vv
-
-      - name: Install cargo-release
-        run: cargo install cargo-release
-
-      - name: Determine version bump type
-        id: bump
-        run: |
-          CURRENT_VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
-
-          if git log "$CURRENT_VERSION"..HEAD --pretty=format:"%s" | grep -q "BREAKING CHANGE\|!:"; then
-            echo "level=major" >> "$GITHUB_OUTPUT"
-          elif git log "$CURRENT_VERSION"..HEAD --pretty=format:"%s" | grep -qE "^feat(\(.+\))?:"; then
-            echo "level=minor" >> "$GITHUB_OUTPUT"
-          else
-            echo "level=patch" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Bump Cargo.toml, commit, and tag
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          cargo release ${{ steps.bump.outputs.level }} --no-publish --no-confirm --execute

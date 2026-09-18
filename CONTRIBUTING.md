@@ -50,7 +50,7 @@ zjyo/
    cargo clippy --all-targets --all-features -- -D warnings
    cargo fmt -- --check
    ```
-4. Commit with [Conventional Commits](https://conventionalcommits.org/): `feat:`, `fix:`, `docs:`, `refactor:`, `test:`, `chore:`. Keep the first line under 50 characters. A `!` after the type (`feat!:`) signals a breaking change and bumps the major version.
+4. Commit with [Conventional Commits](https://conventionalcommits.org/): `feat:`, `fix:`, `docs:`, `refactor:`, `test:`, `chore:`. Keep the first line under 50 characters. A `!` after the type (`feat!:`) signals a breaking change.
 5. Push and open a PR.
 
 ## Code style
@@ -63,7 +63,7 @@ Unit tests live in `src/tests.rs`, named by behavior (`test_find_matches_case_in
 
 ## Release process
 
-Releases are automated: `on_main.yml` reads conventional commits since the last tag to decide the version bump (`fix:` → patch, `feat:` → minor, `!` → major), then `cargo release` bumps `Cargo.toml`, commits, and tags. The tag push triggers `on_release.yml`, which builds Linux/macOS binaries and `.deb`/`.rpm` packages and publishes a GitHub Release. No manual tagging needed.
+Releases are cut on demand by maintainers, not automatically on every push to `main`. Run the **Release** workflow from the Actions tab (or `gh workflow run on_release.yml -f bump=patch`, with `bump` as `patch`/`minor`/`major`). It bumps `Cargo.toml` via `cargo release`, commits, tags, then builds Linux/macOS binaries and `.deb`/`.rpm` packages and publishes a GitHub Release.
 
 ## Code review
 
