@@ -3,9 +3,12 @@ use clap::{Arg, Command};
 use std::env;
 use std::path::{Path, PathBuf};
 
+const VERSION: &str = concat!(env!("CARGO_PKG_VERSION"), " (", env!("ZJYO_GIT_HASH"), ")");
+
 pub fn run() {
     let matches = Command::new("zjyo")
         .about("jump around faster")
+        .version(VERSION)
         .arg(
             Arg::new("pattern")
                 .help("Directory pattern to match")

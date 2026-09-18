@@ -18,7 +18,8 @@ exclude = [
     "test.sh",
     ".releaserc.json",
     ".vscode/",
-    "scripts/"
+    "scripts/",
+    "nfpm.yaml"
 ]
 
 [package.metadata.docs.rs]
@@ -29,7 +30,6 @@ rustdoc-args = ["--cfg", "docsrs"]
 pre-release-commit-message = "chore: release {{version}}"
 tag-message = "Release {{version}}"
 tag-name = "v{{version}}"
-push = false
 
 [[bin]]
 name = "zjyo"

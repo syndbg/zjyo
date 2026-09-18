@@ -62,7 +62,12 @@ cargo test
 ./test.sh
 ```
 
-3. **Verify Setup**
+3. **Enable the pre-commit hook** (runs `cargo fmt --check` and `cargo clippy`, same checks as CI)
+```bash
+git config core.hooksPath scripts/git-hooks
+```
+
+4. **Verify Setup**
 ```bash
 # Check code quality
 cargo clippy -- -D warnings

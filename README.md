@@ -64,24 +64,7 @@ cargo install zjyo
 
 ### Pre-built binaries
 
-Download from [Releases](https://github.com/syndbg/zjyo/releases/latest):
-
-**Linux:**
-```bash
-curl -L -O https://github.com/syndbg/zjyo/releases/latest/download/zjyo_amd64.deb
-sudo dpkg -i zjyo_amd64.deb
-
-# or .rpm for Red Hat/CentOS/Fedora
-curl -L -O https://github.com/syndbg/zjyo/releases/latest/download/zjyo_x86_64.rpm
-sudo rpm -i zjyo_x86_64.rpm
-```
-
-**macOS:**
-```bash
-curl -L -O https://github.com/syndbg/zjyo/releases/latest/download/zjyo-macos
-chmod +x zjyo-macos
-sudo mv zjyo-macos /usr/local/bin/zjyo
-```
+Linux (`.deb`, `.rpm`, glibc/musl tarballs) and macOS (Intel/Apple Silicon tarballs) builds are available on the [Releases](https://github.com/syndbg/zjyo/releases/latest) page.
 
 ### Build from source
 
@@ -102,7 +85,7 @@ Use the shell's prompt command (`precmd`) to track directories, not a `cd` overr
 
 ```bash
 z() {
-    if [[ "$*" == *"--help"* ]] || [[ "$*" == *"-h"* ]] || [[ "$*" == *"-l"* ]] || [[ "$*" == *"-r"* ]] || [[ "$*" == *"-t"* ]] || [[ "$*" == *"-c"* ]] || [[ "$*" == *"-e"* ]] || [[ "$*" == *"-x"* ]] || [[ "$*" == *"--add"* ]] || [[ "$*" == *"--doctor"* ]]; then
+    if [[ "$*" == *"--help"* ]] || [[ "$*" == *"-h"* ]] || [[ "$*" == *"--version"* ]] || [[ "$*" == *"-V"* ]] || [[ "$*" == *"-l"* ]] || [[ "$*" == *"-r"* ]] || [[ "$*" == *"-t"* ]] || [[ "$*" == *"-c"* ]] || [[ "$*" == *"-e"* ]] || [[ "$*" == *"-x"* ]] || [[ "$*" == *"--add"* ]] || [[ "$*" == *"--doctor"* ]]; then
         command zjyo "$@"
         return
     fi
@@ -133,7 +116,7 @@ fi
 
 ```fish
 function z
-    if contains -- "--help" $argv; or contains -- "-h" $argv; or contains -- "-l" $argv; or contains -- "-r" $argv; or contains -- "-t" $argv; or contains -- "-c" $argv; or contains -- "-e" $argv; or contains -- "-x" $argv; or contains -- "--add" $argv; or contains -- "--doctor" $argv
+    if contains -- "--help" $argv; or contains -- "-h" $argv; or contains -- "--version" $argv; or contains -- "-V" $argv; or contains -- "-l" $argv; or contains -- "-r" $argv; or contains -- "-t" $argv; or contains -- "-c" $argv; or contains -- "-e" $argv; or contains -- "-x" $argv; or contains -- "--add" $argv; or contains -- "--doctor" $argv
         command zjyo $argv
         return
     end
@@ -239,6 +222,7 @@ Options:
       --add      Add current directory to database
       --doctor   Remove database entries for missing directories
   -h, --help     Print help information
+  -V, --version  Print version information (includes the git commit hash)
 ```
 
 ## Usage examples

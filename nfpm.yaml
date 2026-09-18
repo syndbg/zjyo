@@ -1,0 +1,25 @@
+name: zjyo
+arch: ${ARCH}
+platform: linux
+version: ${VERSION}
+section: utils
+priority: optional
+maintainer: Anton Antonov <anton.synd.antonov@gmail.com>
+description: |
+  A Rust port of rupa/z: frecency-based directory jumping,
+  same algorithm and database format as the original.
+vendor: syndbg
+homepage: https://github.com/syndbg/zjyo
+license: Apache-2.0
+
+contents:
+  - src: ./release/linux-x64/zjyo
+    dst: /usr/local/bin/zjyo
+  - src: ./completions/zjyo.bash
+    dst: /usr/share/bash-completion/completions/zjyo
+  - src: ./completions/zjyo.zsh
+    dst: /usr/share/zsh/site-functions/_zjyo
+  - src: ./LICENSE
+    dst: /usr/share/doc/zjyo/LICENSE
+  - src: ./README.md
+    dst: /usr/share/doc/zjyo/README.md
