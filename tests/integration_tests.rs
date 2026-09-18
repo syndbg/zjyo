@@ -383,3 +383,111 @@ fn test_empty_database() {
     let list_output = String::from_utf8(output.stdout).unwrap();
     assert!(list_output.trim().is_empty());
 }
+
+#[test]
+fn test_version_flag() {
+    let output = Command::new(get_binary_path())
+        .arg("--version")
+        .output()
+        .expect("Failed to execute command");
+
+    assert!(output.status.success());
+    let version_output = String::from_utf8(output.stdout).unwrap();
+    assert!(version_output.contains("zjyo"));
+}
+
+#[test]
+fn test_empty_pattern_without_list_prints_usage() {
+    let temp_data = create_temp_data_file();
+
+    let output = Command::new(get_binary_path())
+        .env("_Z_DATA", &temp_data)
+        .output()
+        .expect("Failed to execute command");
+
+    assert!(output.status.success());
+    let stderr = String::from_utf8(output.stderr).unwrap();
+    assert!(stderr.contains("Usage"));
+}
+
+#[test]
+fn test_add_tracks_current_directory() {
+    let temp_data = create_temp_data_file();
+    let temp_dir = tempdir().unwrap();
+
+    let output = Command::new(get_binary_path())
+        .arg("--add")
+        .current_dir(temp_dir.path())
+        .env("_Z_DATA", &temp_data)
+        .output()
+        .expect("Failed to execute command");
+
+    assert!(output.status.success());
+
+    let data = fs::read_to_string(&temp_data).unwrap();
+    let canonical = temp_dir.path().canonicalize().unwrap();
+    assert!(data.contains(&canonical.to_string_lossy().to_string()));
+
+    fs::remove_file(&temp_data).ok();
+}
+
+#[test]
+fn test_current_directory_restriction() {
+    let temp_data = create_temp_data_file();
+    let temp_dir = tempdir().unwrap();
+    let inside = temp_dir.path().join("rust-project");
+    let outside = tempdir().unwrap();
+    let outside_rust = outside.path().join("rust-other");
+    fs::create_dir(&inside).unwrap();
+    fs::create_dir(&outside_rust).unwrap();
+    // Canonicalize: on macOS, tempdir() paths resolve through a /var -> /private/var
+    // symlink, and the CLI restricts matches against the subprocess's canonicalized cwd.
+    let inside = inside.canonicalize().unwrap().to_string_lossy().to_string();
+    let outside_rust = outside_rust
+        .canonicalize()
+        .unwrap()
+        .to_string_lossy()
+        .to_string();
+
+    let test_db_content = format!(
+        "{}|5.0|1640995200\n{}|5.0|1640995200\n",
+        inside, outside_rust
+    );
+    fs::write(&temp_data, test_db_content).expect("Failed to write test data");
+
+    let output = Command::new(get_binary_path())
+        .arg("-c")
+        .arg("-e")
+        .arg("rust")
+        .current_dir(temp_dir.path())
+        .env("_Z_DATA", &temp_data)
+        .output()
+        .expect("Failed to execute command");
+
+    assert!(output.status.success());
+    let match_output = String::from_utf8(output.stdout).unwrap();
+    assert!(match_output.contains(&inside));
+    assert!(!match_output.contains(&outside_rust));
+
+    fs::remove_file(&temp_data).ok();
+}
+
+#[test]
+fn test_doctor_reports_hook_status() {
+    let temp_data = create_temp_data_file();
+    let fake_home = tempdir().unwrap();
+
+    let output = Command::new(get_binary_path())
+        .arg("--doctor")
+        .env("_Z_DATA", &temp_data)
+        .env("HOME", fake_home.path())
+        .env("SHELL", "/bin/zsh")
+        .output()
+        .expect("Failed to execute command");
+
+    assert!(output.status.success());
+    let stderr = String::from_utf8(output.stderr).unwrap();
+    assert!(stderr.contains("Hook: not found"));
+
+    fs::remove_file(&temp_data).ok();
+}
