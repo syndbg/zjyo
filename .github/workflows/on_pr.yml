@@ -51,15 +51,3 @@ jobs:
 
       - name: Run tests
         run: cargo test --verbose --all-features --workspace
-
-  test-docker:
-    name: Test in Docker
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Build Docker image
-        run: docker build -t zjyo .
-
-      - name: Run Docker tests
-        run: docker run --rm zjyo /test.sh

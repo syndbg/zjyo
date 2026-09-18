@@ -10,27 +10,19 @@
 
 ## Development setup
 
-Prerequisites: Rust 1.89+ (stable), Git, a shell (bash/zsh/fish) to test integrations, Docker if you want the container smoke test.
+Prerequisites: Rust 1.89+ (stable), Git, a shell (bash/zsh/fish) to test integrations.
 
 ```bash
 git clone https://github.com/syndbg/zjyo.git
 cd zjyo
 cargo build --release
 cargo test --all-features --workspace
-./test.sh
 ```
 
 Enable the pre-commit hook (`cargo fmt --check` + `cargo clippy`, same checks as CI):
 
 ```bash
 git config core.hooksPath scripts/git-hooks
-```
-
-Docker smoke test:
-
-```bash
-docker build -t zjyo .
-docker run --rm zjyo /test.sh
 ```
 
 ## Project structure
@@ -57,7 +49,6 @@ zjyo/
    cargo test --all-features --workspace
    cargo clippy --all-targets --all-features -- -D warnings
    cargo fmt -- --check
-   ./test.sh
    ```
 4. Commit with [Conventional Commits](https://conventionalcommits.org/): `feat:`, `fix:`, `docs:`, `refactor:`, `test:`, `chore:`. Keep the first line under 50 characters. A `!` after the type (`feat!:`) signals a breaking change and bumps the major version.
 5. Push and open a PR.

@@ -42,8 +42,7 @@ Relates to #(issue_number)
 - [ ] Tested with fish
 
 ### Test Cases
-- [ ] Unit tests pass (`cargo test`)
-- [ ] Integration tests pass (`./test.sh`)
+- [ ] Unit and integration tests pass (`cargo test --all-features --workspace`)
 - [ ] Clippy checks pass (`cargo clippy`)
 - [ ] Format checks pass (`cargo fmt --check`)
 - [ ] Manually tested the changes
@@ -58,7 +57,6 @@ Relates to #(issue_number)
 <!-- Check what documentation was updated -->
 
 - [ ] README.md updated (if needed)
-- [ ] CHANGELOG.md updated (if needed)
 - [ ] Code comments added/updated
 - [ ] CLI help text updated (if needed)
 
@@ -137,4 +135,4 @@ Relates to #(issue_number)
 - [ ] I have read and followed the [Contributing Guidelines](CONTRIBUTING.md)
 - [ ] My code follows the project's coding standards
 - [ ] I have tested my changes thoroughly
-- [ ] I agree to the project's [Code of Conduct](CODE_OF_CONDUCT.md)
+- [ ] I agree to the [Rust Code of Conduct](https://www.rust-lang.org/policies/code-of-conduct)
